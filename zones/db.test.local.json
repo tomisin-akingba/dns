@@ -1,0 +1,21 @@
+{
+  "A": [
+    {
+      "name": "@",
+      "value": "192.0.2.55",
+      "ttl": "3600"
+    }
+  ],
+  "CNAME": [],
+  "MX": [],
+  "TXT": [
+    {
+      "name": "@",
+      "value": "v=spf1 -all",
+      "ttl": "3600"
+    }
+  ],
+  "SPF": [],
+  "Other TXT Records": [],
+  "Other Records": []
+}

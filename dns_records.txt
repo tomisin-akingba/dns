@@ -83,5 +83,44 @@
     "SPF": [],
     "Other TXT Records": [],
     "Other Records": []
+  },
+  "tomisin.com": {
+    "A": [
+      {
+        "name": "@",
+        "value": "102.223.34.45",
+        "ttl": "3600",
+        "priority": ""
+      }
+    ],
+    "AAAA": [
+      {
+        "name": "@",
+        "value": "2935:abab:6862:9796",
+        "ttl": "3600",
+        "priority": ""
+      }
+    ],
+    "CNAME": [],
+    "MX": [],
+    "TXT": [],
+    "SPF": [],
+    "Other TXT Records": [],
+    "Other Records": []
+  },
+  "example.local": {
+    "A": [
+      {
+        "name": "@",
+        "value": "192.0.2.50",
+        "ttl": "3600"
+      }
+    ],
+    "CNAME": [],
+    "MX": [],
+    "TXT": [],
+    "SPF": [],
+    "Other TXT Records": [],
+    "Other Records": []
   }
 }

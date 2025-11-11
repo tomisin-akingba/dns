@@ -1,0 +1,17 @@
+$TTL     86400    ; default TTL for this zone (1 day)
+$ORIGIN test.local.
+
+; SOA Record
+@       3600     IN     SOA     dns1.nobus.io.  hostmaster.nobus.io. (
+                                        2025111101
+                                        28800
+                                        7200
+                                        604800
+                                        3600
+                                        )
+
+; A Record
+@	3600	IN	A	192.0.2.55
+
+; TXT Record
+@	3600	IN	TXT	"v=spf1 -all"
