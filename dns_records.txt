@@ -1,0 +1,87 @@
+{
+  "nobus.io": {
+    "A": [
+      {
+        "name": "@",
+        "value": "102.223.37.1",
+        "ttl": "3600",
+        "priority": ""
+      }
+    ],
+    "AAAA": [
+      {
+        "name": "@",
+        "value": "2000:aaba:43ba:1269",
+        "ttl": "3600",
+        "priority": ""
+      }
+    ],
+    "CNAME": [],
+    "MX": [],
+    "TXT": [],
+    "SPF": [],
+    "Other TXT Records": [],
+    "Other Records": []
+  },
+  "google.com": {
+    "A": [
+      {
+        "name": "@",
+        "value": "142.251.10.139",
+        "ttl": "6000",
+        "priority": ""
+      }
+    ],
+    "AAAA": [
+      {
+        "name": "@",
+        "value": "2404:6800:4003:c01b:8b98",
+        "ttl": "6000",
+        "priority": ""
+      }
+    ],
+    "CNAME": [
+      {
+        "name": "www",
+        "value": "google.com",
+        "ttl": "6000",
+        "priority": ""
+      }
+    ],
+    "MX": [
+      {
+        "name": "@",
+        "value": "mail.google.com",
+        "ttl": "6000",
+        "priority": "10"
+      },
+      {
+        "name": "@",
+        "value": "smtp.google.com",
+        "ttl": "6000",
+        "priority": "20"
+      }
+    ],
+    "TXT": [],
+    "SPF": [],
+    "Other TXT Records": [],
+    "Other Records": []
+  },
+  "facebook.com": {
+    "A": [
+      {
+        "name": "@",
+        "value": "192.169.1.1",
+        "ttl": "3600",
+        "priority": ""
+      }
+    ],
+    "AAAA": [],
+    "CNAME": [],
+    "MX": [],
+    "TXT": [],
+    "SPF": [],
+    "Other TXT Records": [],
+    "Other Records": []
+  }
+}
