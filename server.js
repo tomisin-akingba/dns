@@ -3,6 +3,7 @@ import fs from "fs";
 import cors from "cors";
 import bodyParser from "body-parser";
 import path from "path";
+import { isIP } from 'net';
 import { fileURLToPath } from 'url';
 
 const app = express();
@@ -134,8 +135,19 @@ const formatZoneFile = (domain, records) => {
 };
 
 // Try to write zone file into SYSTEM_ZONE_DIR, otherwise write into LOCAL_ZONE_DIR
+const sanitizeDomainForFilename = (domain) => {
+  // allow a-z, A-Z, 0-9, dot and hyphen; replace other chars with '-'
+  return String(domain).trim().toLowerCase().replace(/[^a-z0-9.-]/g, '-');
+};
+
 const writeZoneFile = (domain, records) => {
-  const zoneFilename = `db.${domain}`;
+  const validation = validateRecords(records);
+  console.log('validation result for', domain, validation);
+  if (validation && validation.length) {
+    throw new Error('Validation failed: ' + validation.join('; '));
+  }
+  const safeDomain = sanitizeDomainForFilename(domain);
+  const zoneFilename = `db.${safeDomain}`;
   const zoneContent = formatZoneFile(domain, records);
 
   // first try system dir
@@ -160,6 +172,90 @@ const writeZoneFile = (domain, records) => {
     fs.writeFileSync(localPath + '.json', JSON.stringify(records, null, 2), 'utf8');
     return { path: localPath, writtenTo: 'local' };
   }
+};
+
+// Validate record structure and basic semantics
+const validateRecords = (records) => {
+  const errors = [];
+  if (!records || typeof records !== 'object') {
+    errors.push('Records must be an object');
+    return errors;
+  }
+
+  const checkTTL = (ttl) => {
+    if (ttl === undefined || ttl === null || ttl === '') return true;
+    const n = parseInt(String(ttl).replace(/[^0-9]/g, ''), 10);
+    return !Number.isNaN(n) && n >= 0;
+  };
+
+  // A records must be IPv4
+  if (Array.isArray(records.A)) {
+    records.A.forEach((r, idx) => {
+      if (!r || !r.value) {
+        errors.push(`A[${idx}] missing value`);
+        return;
+      }
+      if (isIP(r.value) !== 4) errors.push(`A[${idx}] value '${r.value}' is not a valid IPv4 address`);
+      if (!checkTTL(r.ttl)) errors.push(`A[${idx}] has invalid ttl '${r.ttl}'`);
+    });
+  }
+
+  // AAAA records must be IPv6
+  if (Array.isArray(records.AAAA)) {
+    records.AAAA.forEach((r, idx) => {
+      if (!r || !r.value) {
+        errors.push(`AAAA[${idx}] missing value`);
+        return;
+      }
+      if (isIP(r.value) !== 6) errors.push(`AAAA[${idx}] value '${r.value}' is not a valid IPv6 address`);
+      if (!checkTTL(r.ttl)) errors.push(`AAAA[${idx}] has invalid ttl '${r.ttl}'`);
+    });
+  }
+
+  // MX records must have numeric priority
+  if (Array.isArray(records.MX)) {
+    records.MX.forEach((r, idx) => {
+      if (!r || !r.value) {
+        errors.push(`MX[${idx}] missing value`);
+        return;
+      }
+      const pr = r.priority;
+      if (pr !== undefined && pr !== null && pr !== '') {
+        const n = Number(pr);
+        if (!Number.isInteger(n) || n < 0) errors.push(`MX[${idx}] has invalid priority '${pr}'`);
+      }
+      if (!checkTTL(r.ttl)) errors.push(`MX[${idx}] has invalid ttl '${r.ttl}'`);
+    });
+  }
+
+  // CNAME values should look like hostnames (basic check)
+  if (Array.isArray(records.CNAME)) {
+    const hostnameRE = /^[a-zA-Z0-9.-]+$/;
+    records.CNAME.forEach((r, idx) => {
+      if (!r || !r.value) {
+        errors.push(`CNAME[${idx}] missing value`);
+        return;
+      }
+      if (!hostnameRE.test(r.value)) errors.push(`CNAME[${idx}] value '${r.value}' looks invalid`);
+      if (!checkTTL(r.ttl)) errors.push(`CNAME[${idx}] has invalid ttl '${r.ttl}'`);
+    });
+  }
+
+  // TXT/SPF: ttl check only
+  const txtBuckets = ['TXT', 'SPF', 'Other TXT Records'];
+  for (const key of txtBuckets) {
+    if (Array.isArray(records[key])) {
+      records[key].forEach((r, idx) => {
+        if (!r || r.value === undefined) {
+          errors.push(`${key}[${idx}] missing value`);
+          return;
+        }
+        if (!checkTTL(r.ttl)) errors.push(`${key}[${idx}] has invalid ttl '${r.ttl}'`);
+      });
+    }
+  }
+
+  return errors;
 };
 
 // Load records from zone JSON files found in system or local zone dirs.
@@ -209,6 +305,10 @@ app.get("/api/records/:domain", (req, res) => {
 // 🟡 Save (Create/Update) domain records
 app.post("/api/records/:domain", (req, res) => {
   const domain = req.params.domain;
+  const errors = validateRecords(req.body);
+  if (errors && errors.length) {
+    return res.status(400).json({ error: 'Validation failed', details: errors });
+  }
   try {
     const result = writeZoneFile(domain, req.body);
     res.status(200).json({ message: "Saved successfully", path: result.path, writtenTo: result.writtenTo });
@@ -221,6 +321,10 @@ app.post("/api/records/:domain", (req, res) => {
 // Accept PUT as well for updates (frontend may use PUT)
 app.put("/api/records/:domain", (req, res) => {
   const domain = req.params.domain;
+  const errors = validateRecords(req.body);
+  if (errors && errors.length) {
+    return res.status(400).json({ error: 'Validation failed', details: errors });
+  }
   try {
     const result = writeZoneFile(domain, req.body);
     res.status(200).json({ message: "Saved successfully", path: result.path, writtenTo: result.writtenTo });
